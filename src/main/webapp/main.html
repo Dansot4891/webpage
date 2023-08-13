@@ -1,0 +1,89 @@
+html>
+<head>
+<meta name=viewport content="width=device-width, initial-scale=1, user-scalable=0">
+<meta charset="utf-8" />
+<link rel="stylesheet" href="css/core.css">
+<link rel="stylesheet" href="css/main.css">
+<title>MySNS</title>
+</head>
+<body>
+    <div class="page-hdr">MySNS</div>
+    <div class="page-body">
+        <div class="page-mnu">
+            <div class="menu" onclick="addFeed()">글쓰기</div>
+            <div class="menu" onclick="">친구보기</div>
+            <div class="menu" onclick="">내정보</div>
+        </div>
+        <table id="list" class="section"></table>
+        <div class="section mtop-10 mbot-30 pad-16">
+        	<div class="button" onclick="getNext()">작성글 더보기</div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script src="js/jquery-3.7.0.min.js"></script>
+<script src="js/core.js"></script>
+<script>
+
+$(document).ready(function() {
+    Page.init(start);
+});
+
+var minNo = -1;
+function start(uid) {
+    AJAX.call("jsp/feedGetGroup.jsp", null, function(data) {
+        var feeds = JSON.parse(data.trim());
+        if (feeds.length > 0) {
+            minNo = feeds[feeds.length - 1].no;
+        }
+        show(feeds);
+    });
+}
+
+function show(feeds) {
+    var str = "";
+    for (var i=0; i<feeds.length; i++) {
+        str += getFeedCode(feeds[i]);
+    }
+    $("#list").append(str);
+}
+
+function getFeedCode(feed) {
+    var name = (feed.user == null) ? feed.id : feed.user.name;
+
+    var str = "<div class='feed'>";
+    str += "<div class='author'>";
+    str += "<div class='photo'></div>";
+    str += "<div class='name'>" + name + "</div>";
+    str += "</div>";
+
+    if (feed.images != null) {
+        var imgstr = "images/" + feed.images[0];
+        str += "<div class='image' style='background-image: url(\"" + imgstr + "\")'></div>";
+    }
+    str += "<div class='text'>" + feed.content + "</div>";
+    str += "</div>";
+    
+    return str;
+}
+
+function getNext() {
+    if (minNo <= 1) {
+        alert("더이상 작성글이 존재하지 않습니다.");
+        return;
+    }
+    var params = {limit: minNo};
+    AJAX.call("jsp/feedGetGroup.jsp", params, function(data) {
+        var feeds = JSON.parse(data.trim());
+        if (feeds.length > 0) {
+            minNo = feeds[feeds.length - 1].no;
+        }
+        show(feeds);
+    });
+}
+
+function addFeed(){
+	window.location.href = "feedadd.html";
+}
+</script>
